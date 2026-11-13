@@ -1,22 +1,224 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-</head>
-<body>
-    <h1>{{ title }}</h1>
+<!--home template/dashboard
+    will display basic stats like total entries written, 
+    a calendar, and one of those github daily boxes
 
-    <p>{{ message }}</p>
+    will be displayed right after user login
 
-    <hr>
+    will navigate to write screen and read screen upon user input
 
-    <h2>Journal</h2>
+    can be used to search entries too.
+-->
 
-    <button>Create Entry</button>
-    <button>View Entries</button>
 
-</body>
-</html>
+{% extends "journal/base.html" %}
+
+{% block title %}Dashboard | Journalizer{% endblock %}
+{% block extra_css %}
+<style>
+    /* Allow positioning the indicator */
+    .flatpickr-day {
+        position: relative;
+    }
+
+    .flatpickr-day.has-entry {
+        font-weight: bold !important;
+        color: #198754 !important;
+    }
+    /* Green dot for dates with entries */
+    .flatpickr-day.has-entry::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: var(--bs-success);
+        border-radius: 50%;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Optional: subtle highlight when hovering */
+    .flatpickr-day.has-entry:hover {
+        background-color: rgba(25, 135, 84, 0.15);
+        border-color: #198754;
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<h1>Dashboard</h1>
+<br> 
+<div class = "grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px;">
+    <div class="card bg-body-tertiary">
+        <div class="card-body">
+            <h5 class="card-title">Welcome back!</h5>
+            <br>
+            <p>Statistics</p>
+            <ul>
+                <li>Total entries written: {{ totalEntries }}</li>
+                <li>Month of last entry: {{ DateOfFirst }}</li>
+                <li>Month of first entry: {{ DateOfLast }}</li>
+            </ul>
+            <!-- can insert some sort of table or graph here -->
+            <br> 
+            <a href="{% url 'main-write' %}" class="btn btn-primary">
+                Write something
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px;">
+                <div>
+                    <h5 class="card-title">Recent History</h5>
+                    <br>
+                    <p>Entries written this month: {{EntriesThisMonth}}</p>
+                    <br>
+                    <p class="card-text">
+                        Click on recent entries to view them. <br><br>
+
+                        Or <a href="{{latestEntry}}">read latest entry</a>
+                    </p>
+                </div>
+
+                <div>
+                    <div id="calendar"></div>
+                    {{ entry_dates|json_script:"entry-dates" }}
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<br> 
+
+<div class = "grid-container" style = "display: grid; grid-template-columns: 30% 70%; gap: 15px;">
+    <div class="card bg-body-tertiary">
+        <div class="card-body">
+            <h5 class="card-title">Journalizer</h5>
+
+            <p>Journalizer by Clarence Yang <br>
+            Web based port of Journalizer 1.0 <br>
+            Version 1.0.0 <br>
+            Build Date 1/11/26</p>
+            <p>Github: <a href="https://github.com/yangman946/journalizer-web">https://github.com/yangman946/journalizer-web</a></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Timeline</h5>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+            {{ Timeline|json_script:"Timeline" }}
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+const ctx = document.getElementById('monthlyChart');
+
+const Time = 
+    JSON.parse(
+        document.getElementById("Timeline").textContent
+    );
+
+const labels = Object.keys(Time);
+const counts = Object.values(Time);
+
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Journal Entries',
+            data: counts,
+            backgroundColor: 'rgba(25, 135, 84, 0.6)',
+            borderRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        maintainAspectRatio: false
+    }
+});
+
+const entryDates = new Set(
+    JSON.parse(
+        document.getElementById("entry-dates").textContent
+    )
+);
+
+function formatCompactDate(date) {
+    date = new Date(date);
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${day}${month}${year}`;
+}
+
+flatpickr("#calendar", {
+
+    inline: true,
+
+    dateFormat: "Y-m-d",
+
+
+
+    onDayCreate: function(dObj, dStr, fp, dayElem) {
+        
+        const dateString = fp.formatDate(
+            dayElem.dateObj,
+            "Y-m-d"
+        );
+        const compactDate = formatCompactDate(dateString);
+
+
+        if (entryDates.has(compactDate)) {
+            dayElem.classList.add("has-entry");
+            dayElem.title = "Journal entry exists";
+        }
+
+    },
+
+    onChange: function(selectedDates, dateStr) {
+        if (selectedDates.length === 0) return;
+
+        const compactDate = formatCompactDate(selectedDates[0]);
+
+        if (entryDates.has(compactDate)) {
+            window.location.href =
+                `/archieve/${selectedDates[0].getFullYear()}/${selectedDates[0].toLocaleString('default', { month: 'long' })}/${compactDate}/`;
+        } else {
+            console.log("No journal entry for this date.");
+        }
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "journal/base.html" %}
+
+{% block title %}Dashboard | Journalizer{% endblock %}
+
+{% block content %}
+
+{% if readonly%}
+    <h1>Read Entry</h1>
+{% else %}
+    <h1>Write Entry</h1>
+{% endif %}
+
+
+<br>
+
+<div class="card">
+    <div class="card-body">
+
+        {% if readonly%}
+            <h5 class="card-title">{{date}}</h5>
+            <br>
+            <textarea class="form-control" rows="20" id="readonlyTextarea" readonly>{{placeholder}}</textarea>
+            <br>
+            <div class="btn-group" role="group" style="  display: flex; justify-content: space-between; align-items: center; gap: 300px;">
+                
+                {% if prev != '' %}
+                <a href="/archieve/{{prevYear}}/{{prevMonth}}/{{prev}}" class="btn btn-primary" role="button">
+                Previous Entry
+                </a>
+                {% else %}
+                    <a href="#" class="btn btn-primary disabled" tabindex="-1" role="button" aria-disabled="true">
+                    Previous Entry
+                    </a>
+                {% endif %}
+
+
+                {% if next != '' %}
+                    <a href="/archieve/{{nextYear}}/{{nextMonth}}/{{next}}" class="btn btn-primary" role="button">
+                    Next Entry
+                    </a>
+                {% else %}
+                    <a href="#" class="btn btn-primary disabled" tabindex="-1" role="button" aria-disabled="true">
+                    Next Entry
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <h5 class="card-title">New entry</h5>
+            <br>
+            <form method="POST" action="">
+                {% csrf_token %}
+
+                {% if not invalid %}
+                <!-- Use type="text" for a single line, or <textarea> for multiple lines -->
+                <textarea class="form-control" name="entryForm" rows="20" ></textarea>
+                <br>
+                <!-- Trigger Button (Does NOT submit yet, it just opens the modal) -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                    Save
+                </button>
+
+                <!-- Bootstrap Modal Structure -->
+                <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmModalLabel">Are you sure?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Please confirm that you are done. No changes can be made once submitted.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <!-- This button triggers the submission because type="submit" and it is inside the <form> -->
+                                <button type="submit" class="btn btn-success">Yes, Confirm and Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {%else%}
+                <!-- Use type="text" for a single line, or <textarea> for multiple lines -->
+                <textarea class="form-control" rows="20" readonly></textarea>
+                <br>
+                <!-- Trigger Button (Does NOT submit yet, it just opens the modal) -->
+                <button type="button" class="btn btn-primary disabled">
+                    Save
+                </button>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        var myModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                        myModal.show();
+                    });
+                </script>
+                <!-- Bootstrap Modal Structure -->
+                <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmModalLabel">Daily journal limit reached</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Come back tomorrow to write again.
+                            </div>
+                            <div class="modal-footer">
+                    
+                                <a href="/" class="btn btn-primary" role="button">
+                                Okay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {%endif%}
+            </form>
+
+        {% endif %}
+        
+
+    </div>
+</div>
+
+
+{% endblock %}

@@ -211,12 +211,10 @@ class fileManager:
 
         #print(self.values)
 
-    def checkEntry(self):
-
-        pass
 
     def saveEntry(self, content):
         now = datetime.now()
+
         yearx = now.year
         day = now.strftime("%d").lstrip("0")
         month = now.strftime("%m").lstrip("0")
@@ -224,46 +222,45 @@ class fileManager:
 
         formatted_date = f"{day}{month}{year}"
 
-
-
-
         # Define file path
-        file_path = Path(f"{self.path}/{yearx}/{month}/{formatted_date}.txt")
+        file_path = Path(self.path) / str(yearx) / month / f"{formatted_date}.txt"
 
-        # Create the parent directory if it doesn't exist
+        # Create parent directory if it doesn't exist
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-       
-
-
-
-        with open(f"{self.path}/{yearx}/{month}/{formatted_date}.txt", "w", encoding="utf-8") as file:
-            file.writelines(f"{day}/{month}/{year}")
-            file.write("\n")
-            file.write("\n")
-            
+        # Write entry
+        with file_path.open("w", encoding="utf-8") as file:
+            file.write(f"{day}/{month}/{year}\n\n")
             file.write(content)
-            file.flush()
-            
 
-
-        # find where it is saved
+        # Refresh directory structure
         self.refresh()
+
         return yearx, month, formatted_date
 
     def find(self, yearx, month, formatted_date):
 
-        # function to read entry based on url info
-        years = self.values[f"{self.path}"]["folders"]
+        # Function to read entry based on URL information
+        base_path = Path(self.path)
+
+        years = self.values[str(base_path)]["folders"]
         yearind = years.index(str(yearx))
-        months = self.values[f"{self.path}\\{yearx}"]["folders"]
+
+        year_path = str(base_path / str(yearx))
+        months = self.values[year_path]["folders"]
         monthind = months.index(str(month))
-        days = self.values[f"{self.path}\\{yearx}\\{month}"]["entries"]
+
+        month_path = str(base_path / str(yearx) / str(month))
+        days = self.values[month_path]["entries"]
         dayind = days.index(f"{formatted_date}.txt")
 
-
-        # Newcontent, Newyearind, Newmonthind, Newdayind
-        return self.getContent(self.getEntry(yearind, monthind, dayind)), yearind, monthind, dayind
+        # Return content and indices
+        return (
+            self.getContent(self.getEntry(yearind, monthind, dayind)),
+            yearind,
+            monthind,
+            dayind
+        )
 
     def todayExists(self):
         now = datetime.now()
@@ -273,9 +270,11 @@ class fileManager:
         month = now.strftime("%m").lstrip("0")
         year = now.strftime("%y")
         formatted_date = f"{day}{month}{year}"
-        path = f"{self.path}/{yearx}/{month}/{formatted_date}.txt"
 
-        p = Path(path)
+
+        #path = f"{self.path}/{yearx}/{month}/{formatted_date}.txt"
+        p1 = str(Path(self.path) / str(yearx) / str(month) / str(f"{formatted_date}.txt"))
+        p = Path(p1)
 
         return p.exists()
 
@@ -295,8 +294,8 @@ class fileManager:
 
     def findEntry(self, name, monthI, yearI):
         # finds entry
-
-        searchDIR = Path(f"{self.path}\\{yearI}\\{monthI}\\")
+        P = str(Path(self.path) / str(yearI) / str(monthI))
+        searchDIR = Path(P)
         print(searchDIR)
         file = f"{name}.txt"
         print(file)
@@ -318,15 +317,17 @@ class fileManager:
         dind = None
 
         years = self.values[f"{self.path}"]["folders"]
+        year_path = str(Path(self.path) / str(year))
         yind = years.index(str(year))
 
         if month != None:
             
-            months = self.values[f"{self.path}\\{year}"]["folders"]
+            months = self.values[year_path]["folders"]
+            month_path = str(Path(year_path) / str(month))
             mind = months.index(str(month))
 
             if day != None:
-                days = self.values[f"{self.path}\\{year}\\{month}"]["entries"]
+                days = self.values[month_path]["entries"]
                 
                 dind = days.index(day)
         return [yind, mind, dind]
@@ -347,14 +348,16 @@ class fileManager:
 
         # return list of months
         year = years[yearind]
-        months = self.values[f"{self.path}\\{year}"]["folders"]
+        year_path = str(Path(self.path) / str(year))
+        months = self.values[year_path]["folders"]
 
         if monthind == None:
             return months
         
         # returns list of days
         month = months[monthind]
-        days = self.values[f"{self.path}\\{year}\\{month}"]["entries"]
+        month_path = str(Path(year_path) / str(month))
+        days = self.values[month_path]["entries"]
 
         if dayind == None:
             return days
@@ -362,8 +365,8 @@ class fileManager:
         name = days[dayind]
 
         # return the file itself
-        file = f"{self.path}/{year}/{month}/{name}"
-        return file
+        #file = f"{self.path}/{year}/{month}/{name}"
+        return str(Path(month_path) / str(name))
 
 
     def getRoot(self):

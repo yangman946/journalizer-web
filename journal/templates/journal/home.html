@@ -46,81 +46,85 @@
 </style>
 {% endblock %}
 {% block content %}
-
-<h1>Dashboard</h1>
-<br> 
-<div class = "grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px;">
-    <div class="card bg-body-tertiary">
-        <div class="card-body">
-            <h5 class="card-title">Welcome back!</h5>
-            <br>
-            <p>Statistics</p>
-            <ul>
-                <li>Total entries written: {{ totalEntries }}</li>
-                <li>Month of last entry: {{ DateOfFirst }}</li>
-                <li>Month of first entry: {{ DateOfLast }}</li>
-            </ul>
-            <!-- can insert some sort of table or graph here -->
-            <br> 
-            <a href="{% url 'main-write' %}" class="btn btn-primary">
-                Write something
-            </a>
+<div style="flex: 1; min-height: 0;">
+    <h1>Dashboard</h1>
+    <br> 
+    <div class = "grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px; ">
+        <div class="card bg-body-tertiary">
+            <div class="card-body">
+                <h5 class="card-title">Welcome back!</h5>
+                <br>
+                <p>Statistics</p>
+                <ul>
+                    <li>Total entries written: {{ totalEntries }}</li>
+                    <li>Month of last entry: {{ DateOfFirst }}</li>
+                    <li>Month of first entry: {{ DateOfLast }}</li>
+                </ul>
+                <!-- can insert some sort of table or graph here -->
+                <br> 
+                <a href="{% url 'main-write' %}" class="btn btn-primary">
+                    Write something
+                </a>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px;">
-                <div>
-                    <h5 class="card-title">Recent History</h5>
-                    <br>
-                    <p>Entries written this month: {{EntriesThisMonth}}</p>
-                    <br>
-                    <p class="card-text">
-                        Click on recent entries to view them. <br><br>
+        <div class="card">
+            <div class="card-body">
+                <div class="grid-container" style = "display: grid; grid-template-columns: 50% 50%; gap: 15px;">
+                    <div>
+                        <h5 class="card-title">Recent History</h5>
+                        <br>
+                        <p>Entries written this month: {{EntriesThisMonth}}</p>
+                        <br>
+                        <p class="card-text">
+                            Click on recent entries to view them. <br><br>
 
-                        Or <a href="{{latestEntry}}">read latest entry</a>
-                    </p>
+                            Or <a href="{{latestEntry}}">read latest entry</a>
+                        </p>
+                    </div>
+
+                    <div>
+                        <div id="calendar"></div>
+                        {{ entry_dates|json_script:"entry-dates" }}
+                    </div>
+
+
+
                 </div>
-
-                <div>
-                    <div id="calendar"></div>
-                    {{ entry_dates|json_script:"entry-dates" }}
-                </div>
-
-
-
             </div>
         </div>
     </div>
-</div>
 
-<br> 
+    <br> 
 
-<div class = "grid-container" style = "display: grid; grid-template-columns: 30% 70%; gap: 15px;">
-    <div class="card bg-body-tertiary">
-        <div class="card-body">
-            <h5 class="card-title">Journalizer</h5>
+    <div class = "grid-container" style = "display: grid; grid-template-columns: 30% 70%; gap: 15px;">
+        <div class="card bg-body-tertiary">
+            <div class="card-body">
+                <h5 class="card-title">Journalizer</h5>
 
-            <p>Journalizer by Clarence Yang <br>
-            Web based port of Journalizer 1.0 <br>
-            Version 1.0.0 <br>
-            Build Date 1/11/26</p>
-            <p>Github: <a href="https://github.com/yangman946/journalizer-web">https://github.com/yangman946/journalizer-web</a></p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Timeline</h5>
-            <div style="height: 250px; width: 100%;">
-                <canvas id="monthlyChart"></canvas>
+                <p>Journalizer by Clarence Yang <br>
+                Web based port of Journalizer 1.0 <br>
+                Version 1.0.0 <br>
+                Build Date 1/11/26</p>
+                <p>Github: <a href="https://github.com/yangman946/journalizer-web">https://github.com/yangman946/journalizer-web</a></p>
             </div>
-            {{ Timeline|json_script:"Timeline" }}
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if not Warning%}
+                <h5 class="card-title">Timeline</h5>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+                {{ Timeline|json_script:"Timeline" }}
+                {% endif %}
+            </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {% endblock %}
 

@@ -32,6 +32,11 @@ from datetime import datetime
 from pathlib import Path
 from os import listdir, walk
 from os.path import isfile, join
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 import base64
 from cryptography.hazmat.primitives import hashes
@@ -49,7 +54,8 @@ class Crypto:
             self.key = self.load_key()
             self.cipher_suite = Fernet(self.key)
         """
-        BASE_DIR = Path(__file__).resolve().parent
+        BASE_DIR = Path(__file__).resolve().parent # this is a temporary file
+        
         self.path = BASE_DIR
 
         self.My_key = Path(f"{self.path}/key.key")
@@ -167,24 +173,29 @@ class fileManager:
 
 
         self.values = {}
+        self.exists = False
 
-        BASE_DIR = Path(__file__).resolve().parent
+        #BASE_DIR = Path(__file__).resolve().parent # C:\Users\Clarence\Documents\GitHub\journalizer-web\journal\services
+        self.BASE_DIR = Path(os.environ.get('JOURNAL_PATH')) # path containing journals
 
-        self.path = BASE_DIR / "journals"
+        self.path = self.BASE_DIR / "journals"
 
-        #print(self.path)
+        if self.path.exists():
+            self.exists = True
 
-        for (dirpath, dirnames, filenames) in walk(self.path):
+            #print(self.path)
 
-            template = {
-                "folders": dirnames,
-                "entries": filenames
-            }
-            self.values[dirpath] = template
+            for (dirpath, dirnames, filenames) in walk(self.path):
+
+                template = {
+                    "folders": dirnames,
+                    "entries": filenames
+                }
+                self.values[dirpath] = template
 
 
-        # sort the years, months and days
-        self.refresh()
+            # sort the years, months and days
+            self.refresh()
 
     
     def refresh(self):
@@ -326,7 +337,8 @@ class fileManager:
         # get entry based on indicies
         # if you want to access via date use date2ind 
 
-
+        if self.exists == False:
+            return None
         # returns list of years
         years = self.values[f"{self.path}"]["folders"]
         if yearind == None:

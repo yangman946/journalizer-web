@@ -13,3 +13,5 @@ staticfiles/
 
 # Journal data
 journal/services/journals/
+
+db.sqlite3

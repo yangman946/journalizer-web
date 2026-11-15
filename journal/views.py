@@ -7,6 +7,8 @@ from journal.services.EntryManager import fileManager, Crypto
 from django.contrib.auth import views as auth_views, authenticate, login as auth_login, logout as auth_logout
 from pathlib import Path
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+import os
 
 month_ref = [
     "January",
@@ -27,14 +29,62 @@ month_ref = [
 # Create your views here.
 @login_required
 def home(request):
+    # settings
+    if request.method == 'POST': 
+        url = request.POST.get('entryForm')
+        
+        # Process or save your data here
+        # e.g., Subscriber.objects.create(email=email)
+        messages.success(request, "Settings updated")
+        os.environ["JOURNAL_PATH"] = url
+        
+        # Redirect back to the page the user submitted from, or home as a fallback
+        next_url = request.POST.get('next') or 'home'
+        return redirect(next_url)
+
 
     year = date.today().year
 
     f = fileManager()
-
+    
 
     years = f.getEntry()
 
+    if years == None:
+        context = {
+            'title': 'Secure Journal',
+            'settings_URL': f.BASE_DIR,
+            'Warning': 'Journal directory does not exist',
+            'message': 'Welcome to your journal.',
+            "entry_dates": [],
+            "Timeline": {},
+            "nav": [{'title': 'home', 'url': ''}],
+            "totalEntries": '0',
+            "DateOfFirst": 'None',
+            "DateOfLast": f"None",
+            "EntriesThisMonth": '0',
+            "latestEntry": f""
+        }
+
+        return render(request, 'journal/home.html', context)
+
+    # empty list
+    if len(years) == 0:
+        context = {
+            'title': 'Secure Journal',
+            'settings_URL': f.BASE_DIR,
+            'message': 'Welcome to your journal.',
+            "entry_dates": [],
+            "Timeline": {},
+            "nav": [{'title': 'home', 'url': ''}],
+            "totalEntries": '0',
+            "DateOfFirst": 'None',
+            "DateOfLast": f"None",
+            "EntriesThisMonth": '0',
+            "latestEntry": f""
+        }
+
+        return render(request, 'journal/home.html', context)
     firstyear = years[0]
     lastyear = years[-1]
 
@@ -91,6 +141,7 @@ def home(request):
     context = {
         'title': 'Secure Journal',
         'message': 'Welcome to your journal.',
+        'settings_URL': f.BASE_DIR,
         "entry_dates": entry_dates,
         "Timeline": dict(reversed(last_x.items())),
         "nav": [{'title': 'home', 'url': ''}],
@@ -128,6 +179,7 @@ def write(request):
     context = {
         'title': 'Write in journal',
         'message': 'Welcome to your journal.',
+        'settings_URL': fileManager().BASE_DIR,
         'readonly': False,
         'placeholder': '',
         'date': '',
@@ -240,6 +292,7 @@ def read(request, xyear, xmonth, id):
     context = {
         'title': 'Read entry',
         'message': 'Welcome to your journal.',
+        'settings_URL': fileManager().BASE_DIR,
         'readonly': True,
         'placeholder': s,
         'date': content[0],
@@ -261,7 +314,15 @@ def archieve(request):
     f = fileManager()
     years = f.getEntry() # list of years
 
-
+    if not f.exists:
+        context = {
+            'title': 'Archieves',
+            'Warning': 'Journal directory does not exist',
+            'message': 'Welcome to your journal.',
+            'dict': {},
+            "nav": [{'title': 'home', 'url': reverse("home")}, {'title': 'archieve', 'url': ''}]
+        }
+        return render(request, 'journal/archieve.html', context)
     d = {}
 
     for i in range(len(years)): #loop through years
@@ -286,6 +347,7 @@ def archieve(request):
     context = {
         'title': 'Archieves',
         'message': 'Welcome to your journal.',
+        'settings_URL': fileManager().BASE_DIR,
         'dict': d,
         "nav": [{'title': 'home', 'url': reverse("home")}, {'title': 'archieve', 'url': ''}]
     }

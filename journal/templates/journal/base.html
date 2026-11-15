@@ -9,8 +9,8 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1">
 
-    
-    {% if title%}
+    <link rel="icon" type="image/x-icon" href="{% static 'journal/assets/favicon.png' %}">
+    {% if title %}
         <title>Journalizer - {{ title }}</title>    
     {% else %}
         <title>Journalizer</title>
@@ -32,8 +32,22 @@
     
 
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh; /* Fits the exact visible screen height */
+        }
+        main {
+            
+            flex: 1; /* Automatically grows or shrinks to fill remaining space */
+            min-height: 0; /* Allows flex items to shrink smaller than their content */
+        }
+
+        header, footer {
+            flex-shrink: 0; /* Keeps header and footer at their natural height */
+        }
         .sidebar {
-            height: calc(100vh - 56px);
+            height: calc(100vh - 58px);
             overflow-y: auto;
 
             /* Hide scrollbar */
@@ -129,6 +143,8 @@
 
 </head>
 
+
+
 <body class="bg-body text-body">
 
     <!-- Navbar -->
@@ -168,14 +184,50 @@
 
                     <!-- Bottom item -->
                 <div class="mt-auto">
-
+                    <div class="">
+                    <button type="button" class="btn" style="padding-bottom: 20px;" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="@mdo" >
+                    <i class="bi bi-gear-fill"></i> Settings
+                    </button>
+                    <br>
+                    
                     <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="submit" class="btn text-danger border-0 bg-transparent shadow-none">
                         <i class="bi bi-box-arrow-right"></i>
                         Logout
                     </button>
                     </form>
+                    
+                    <div class="modal fade" id="exampleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel">Settings</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="{% url 'home' %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    
+                                    <div class="mb-3">
+                                        <label for="recipient-name" class="col-form-label">Journal Directory:</label>
+                                        <input type="text" class="form-control" id="recipient-name" name="entryForm" value="{{settings_URL}}">
+                                    </div>
+
+                                    
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    </div>
+                    
 
                 </div>
 
@@ -184,9 +236,13 @@
 
             <!-- Main content -->
             <main class="col-md-10 p-4">
+                {% if Warning %}
                 
+                <div class="alert alert-warning" role="alert">
+                {{ Warning }}
+                </div>
+                {% endif %}
                 <!--Breadcrumb: add links for easy access -->
-
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         {% for item in nav %}
@@ -204,6 +260,7 @@
                         {% endfor %}
                     </ol>
                 </nav>
+                
                 {% block content %}
                 {% endblock %}
 

@@ -1,0 +1,15 @@
+services:
+  journalizer:
+    build: .
+    container_name: journalizer
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+
+    volumes:
+      - /mnt/storage/journalizer/journals:/data/journals
+      - /opt/journalizer/data:/appdata
